@@ -2,12 +2,29 @@ import pandas as pd
 import networkx as nx
 from pyvis.network import Network
 import pickle
+import os
 
 # =====================================
-# LOAD RAW DATASET
+# PATH CONFIGURATION (PROJECT SAFE)
 # =====================================
 
-df = pd.read_csv("C:\\Users\\HP\\Desktop\\11\\ntwrk\\fraud_dataset.csv")
+BASE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
+
+DATA_PATH = os.path.join(BASE_DIR, "data", "raw", "fraud_dataset.csv")
+GRAPH_PATH = os.path.join(BASE_DIR, "data", "graph", "transaction_graph.pkl")
+HTML_PATH = os.path.join(BASE_DIR, "visualizations", "graph_visualization.html")
+
+# Create folders if missing
+os.makedirs(os.path.join(BASE_DIR, "data", "graph"), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "visualizations"), exist_ok=True)
+
+# =====================================
+# LOAD DATASET
+# =====================================
+
+df = pd.read_csv(DATA_PATH)
 
 print("Dataset Loaded")
 print("Shape:", df.shape)
@@ -42,20 +59,19 @@ print("Total Nodes:", G.number_of_nodes())
 print("Total Edges:", G.number_of_edges())
 
 # =====================================
-# SAVE GRAPH
+# SAVE GRAPH (.pkl)
 # =====================================
 
-with open("C:\\Users\\HP\\Desktop\\11\\ntwrk\\transaction_graph.pkl", "wb") as f:
+with open(GRAPH_PATH, "wb") as f:
     pickle.dump(G, f)
 
-print("Graph Saved.")
+print("Graph Saved at:", GRAPH_PATH)
 
 # =====================================
 # INTERACTIVE VISUALIZATION
 # =====================================
 
-# IMPORTANT:
-# Full graph is huge → take sample
+# Full graph is huge → sample for visualization
 sample_nodes = list(G.nodes())[:300]
 H = G.subgraph(sample_nodes)
 
@@ -78,7 +94,7 @@ for node, data in H.nodes(data=True):
     elif node_type == "device":
         color = "#2ecc71"   # green
     else:
-        color = "#f39c12"   # orange
+        color = "#f39c12"   # orange (transaction)
 
     net.add_node(
         node,
@@ -91,7 +107,7 @@ for node, data in H.nodes(data=True):
 for source, target in H.edges():
     net.add_edge(source, target)
 
-# Physics settings (dynamic movement)
+# Physics settings
 net.set_options("""
 var options = {
   "physics": {
@@ -104,7 +120,7 @@ var options = {
 }
 """)
 
-# Save interactive graph
-net.write_html("graph_visualization.html")
+# Save visualization
+net.write_html(HTML_PATH)
 
-print("Interactive graph created successfully.")
+print("Interactive graph created at:", HTML_PATH)
